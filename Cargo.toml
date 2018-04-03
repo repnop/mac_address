@@ -6,6 +6,7 @@ build = "build.rs"
 description = "Cross-platform retrieval of a network interface MAC address."
 repository = "https://github.com/rep-nop/mac_address"
 readme = "README.md"
+license = "MIT AND APACHE 2.0"
 keywords = ["mac", "address", "network", "interface"]
 
 [dependencies]
