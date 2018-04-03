@@ -1,0 +1,17 @@
+[package]
+name = "mac_address"
+version = "0.1.0"
+authors = ["rep-nop <repnop@outlook.com>"]
+build = "build.rs"
+description = "Cross-platform retrieval of a network interface MAC address."
+repository = "https://github.com/rep-nop/mac_address"
+readme = "README.md"
+keywords = ["mac", "address", "network", "interface"]
+
+[dependencies]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2.40"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3.4", features = ["winerror", "ws2def"] }
