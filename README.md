@@ -1,5 +1,5 @@
 # `mac_address`
-`mac-address` provides a cross platform way to retrieve the MAC address of network hardware. See [the Wikipedia entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
+`mac_address` provides a cross platform way to retrieve the MAC address of network hardware. See [the Wikipedia entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 
 Currently does not support MacOS.
 

@@ -1,4 +1,4 @@
-//! `mac-address` provides a cross platform way to retrieve the MAC
+//! `mac_address` provides a cross platform way to retrieve the MAC
 //! address of network hardware. See [the Wikipedia entry](https://en.wikipedia.org/wiki/MAC_address)
 //! for more information.
 //!
