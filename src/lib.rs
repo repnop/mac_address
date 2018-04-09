@@ -29,6 +29,34 @@ pub enum MacAddressError {
     NoDevicesFound,
 }
 
+impl std::fmt::Display for MacAddressError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use MacAddressError::*;
+
+        write!(
+            f,
+            "{}",
+            match self {
+                &InternalError => "Internal API error",
+                &NoDevicesFound => "No network interface devices found",
+            }
+        )?;
+
+        Ok(())
+    }
+}
+
+impl std::error::Error for MacAddressError {
+    fn description(&self) -> &str {
+        use MacAddressError::*;
+
+        match self {
+            &InternalError => "Internal API error",
+            &NoDevicesFound => "No network interface devices found",
+        }
+    }
+}
+
 /// Contains the individual bytes of the MAC address.
 #[derive(Debug, Clone, Copy)]
 pub struct MacAddress {
