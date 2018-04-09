@@ -1,9 +1,13 @@
 # `mac_address`
-`mac_address` provides a cross platform way to retrieve the MAC address of network hardware. See [the Wikipedia entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 
-Currently does not support MacOS.
+[![crates.io](https://img.shields.io/crates/v/mac_address.svg)](https://crates.io/crates/mac_address)
+[![Released API docs](https://docs.rs/mac_address/badge.svg)](https://docs.rs/mac_address)
 
-# Example
+`mac_address` provides a cross platform way to retrieve the [MAC address](https://en.wikipedia.org/wiki/MAC_address) of network hardware.
+
+Supported platforms: Linux, Windows
+
+## Example
 
 ```rust
 extern crate mac_address;
@@ -21,5 +25,6 @@ fn main() {
 }
 ```
 
-# License
+## License
+
 `mac_address` is licensed under both MIT and Apache 2.0
