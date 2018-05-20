@@ -10,7 +10,7 @@
 extern crate winapi;
 
 #[cfg(target_os = "linux")]
-extern crate libc;
+extern crate nix;
 
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
@@ -27,6 +27,13 @@ pub enum MacAddressError {
     InternalError,
     /// Failed to find a device with a MAC address.
     NoDevicesFound,
+}
+
+#[cfg(target_os = "linux")]
+impl From<nix::Error> for MacAddressError {
+    fn from(_: nix::Error) -> MacAddressError {
+        MacAddressError::InternalError
+    }
 }
 
 impl std::fmt::Display for MacAddressError {
