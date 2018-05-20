@@ -1,8 +1,8 @@
-//! `mac_address` provides a cross platform way to retrieve the MAC
-//! address of network hardware. See [the Wikipedia entry](https://en.wikipedia.org/wiki/MAC_address)
-//! for more information.
+//! `mac_address` provides a cross platform way to retrieve the MAC address of
+//! network hardware. See [the Wikipedia
+//! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Currenly does not support MacOS.
+//! Supported platforms: Linux, Windows
 
 #![deny(missing_docs)]
 
@@ -21,12 +21,12 @@ mod os;
 mod os;
 
 /// Possible errors when attempting to retrieve a MAC address.
+///
+/// Eventually will expose more detailed error information.
 #[derive(Debug)]
 pub enum MacAddressError {
     /// Signifies an internal API error has occurred.
     InternalError,
-    /// Failed to find a device with a MAC address.
-    NoDevicesFound,
 }
 
 #[cfg(target_os = "linux")]
@@ -45,7 +45,6 @@ impl std::fmt::Display for MacAddressError {
             "{}",
             match self {
                 &InternalError => "Internal API error",
-                &NoDevicesFound => "No network interface devices found",
             }
         )?;
 
@@ -59,7 +58,6 @@ impl std::error::Error for MacAddressError {
 
         match self {
             &InternalError => "Internal API error",
-            &NoDevicesFound => "No network interface devices found",
         }
     }
 }
@@ -71,11 +69,26 @@ pub struct MacAddress {
 }
 
 /// Calls the OS-specific function for retrieving the MAC address of the first
-/// network device that contains one.
-pub fn get_mac_address() -> Result<MacAddress, MacAddressError> {
+/// network device containing one, ignoring local-loopback.
+pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac()?;
 
-    Ok(MacAddress { bytes })
+    Ok(match bytes {
+        Some(b) => Some(MacAddress { bytes: b }),
+        None => None,
+    })
+}
+
+/// Attempts to look up the MAC address of an interface via the specified name.
+/// **NOTE**: On Windows, this uses the `FriendlyName` field of the adapter, which
+/// is the same name shown in the "Network Connections" Control Panel screen.
+pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
+    let bytes = os::get_mac_from_name(name)?;
+
+    Ok(match bytes {
+        Some(b) => Some(MacAddress { bytes: b }),
+        None => None,
+    })
 }
 
 impl MacAddress {
