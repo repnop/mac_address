@@ -92,6 +92,13 @@ pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressE
 }
 
 impl MacAddress {
+    /// Construct a new MacAddress
+    pub fn new(a: u8, b: u8, c: u8, d: u8, e: u8, f: u8) -> MacAddress {
+        MacAddress {
+            bytes: [a, b, c, d, e, f],
+        }
+    }
+
     /// Returns the array of MAC address bytes.
     pub fn bytes(&self) -> [u8; 6] {
         self.bytes
