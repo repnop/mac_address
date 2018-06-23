@@ -2,21 +2,21 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows
+//! Supported platforms: Linux, Windows, MacOS
 
 #![deny(missing_docs)]
 
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 extern crate nix;
 
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
 mod os;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 #[path = "linux.rs"]
 mod os;
 
@@ -29,7 +29,7 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
@@ -69,6 +69,7 @@ pub struct MacAddress {
 }
 
 impl MacAddress {
+    /// Creates a new `MacAddress` struct from the given bytes.
     pub fn new(bytes: [u8; 6]) -> MacAddress {
         MacAddress { bytes }
     }

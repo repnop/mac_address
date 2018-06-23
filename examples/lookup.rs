@@ -3,7 +3,7 @@ extern crate mac_address;
 use mac_address::mac_address_by_name;
 
 fn main() {
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     let name = "eth0";
 
     #[cfg(target_os = "windows")]
