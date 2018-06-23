@@ -9,14 +9,14 @@
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 extern crate nix;
 
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
 mod os;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 #[path = "linux.rs"]
 mod os;
 
@@ -29,7 +29,7 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
