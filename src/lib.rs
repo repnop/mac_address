@@ -120,3 +120,8 @@ impl std::fmt::Display for MacAddress {
         Ok(())
     }
 }
+
+#[cfg(all(test, target_os = "macos"))]
+fn mac_test() {
+    panic!("MAC address is {}", get_mac_address().unwrap().unwrap());
+}
