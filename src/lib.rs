@@ -2,7 +2,7 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows
+//! Supported platforms: Linux, Windows, MacOS
 
 #![deny(missing_docs)]
 
@@ -120,10 +120,4 @@ impl std::fmt::Display for MacAddress {
 
         Ok(())
     }
-}
-
-#[cfg(target_os = "macos")]
-#[test]
-fn mac_test() {
-    panic!("MAC address is {}", get_mac_address().unwrap().unwrap());
 }

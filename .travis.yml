@@ -1,5 +1,0 @@
-os:
-    - osx
-language: rust
-rust:
-    - stable
