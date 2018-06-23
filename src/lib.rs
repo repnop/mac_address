@@ -69,6 +69,7 @@ pub struct MacAddress {
 }
 
 impl MacAddress {
+    /// Creates a new `MacAddress` struct from the given bytes.
     pub fn new(bytes: [u8; 6]) -> MacAddress {
         MacAddress { bytes }
     }
