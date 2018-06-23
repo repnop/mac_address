@@ -63,9 +63,15 @@ impl std::error::Error for MacAddressError {
 }
 
 /// Contains the individual bytes of the MAC address.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MacAddress {
     bytes: [u8; 6],
+}
+
+impl MacAddress {
+    pub fn new(bytes: [u8; 6]) -> MacAddress {
+        MacAddress { bytes }
+    }
 }
 
 /// Calls the OS-specific function for retrieving the MAC address of the first
