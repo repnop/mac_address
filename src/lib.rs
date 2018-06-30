@@ -13,7 +13,7 @@ extern crate winapi;
 extern crate nix;
 
 #[cfg(target_os = "windows")]
-#[path = "windows\\mod.rs"]
+#[path = "windows/mod.rs"]
 mod os;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 #[path = "linux.rs"]
@@ -89,18 +89,23 @@ impl MacAddress {
 /// Calls the OS-specific function for retrieving the MAC address of the first
 /// network device containing one, ignoring local-loopback.
 pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
-    let address = os::get_mac()?;
+    let mut addresses = MacAddresses::new()?;
 
-    Ok(address)
+    Ok(addresses.next())
 }
 
 /// Attempts to look up the MAC address of an interface via the specified name.
 /// **NOTE**: On Windows, this uses the `FriendlyName` field of the adapter, which
 /// is the same name shown in the "Network Connections" Control Panel screen.
 pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
-    let address = os::get_mac_from_name(name)?;
+    let addresses = MacAddresses::with_loopback(true)?;
 
-    Ok(address)
+    let mut iter = addresses.filter(|x| match x.name() {
+        Some(n) => n == name,
+        None => false,
+    });
+
+    Ok(iter.next())
 }
 
 impl std::fmt::Display for MacAddress {

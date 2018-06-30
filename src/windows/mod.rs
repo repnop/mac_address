@@ -7,14 +7,16 @@ mod win;
 mod win;
 
 use self::win::{GetAdaptersAddresses, PIP_ADAPTER_ADDRESSES};
+use super::{MacAddress, MacAddressError};
 use std::ptr::null_mut;
-use winapi::shared::winerror::ERROR_SUCCESS;
-use winapi::shared::ws2def::AF_UNSPEC;
-use MacAddress;
-use MacAddressError::{self, *};
+use winapi::shared::{winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
 
 const GAA_FLAG_NONE: win::ULONG = 0x0000;
 
+/// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
+/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
+/// then loops over the returned list until it finds a network device with a MAC address,
+/// and returns it. If it fails to find a device, it returns a `NoDevicesFound` error.
 pub struct MacAddresses {
     #[allow(dead_code)]
     adapters_list: Vec<u8>,
@@ -63,7 +65,7 @@ impl MacAddresses {
 
         // Make sure we were successful
         if result != ERROR_SUCCESS {
-            return Err(InternalError);
+            return Err(MacAddressError::InternalError);
         }
 
         // Pointer to the current location in the linked list
@@ -115,27 +117,6 @@ impl Iterator for MacAddresses {
             }
         }
     }
-}
-
-/// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
-/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
-/// then loops over the returned list until it finds a network device with a MAC address,
-/// and returns it. If it fails to find a device, it returns a `NoDevicesFound` error.
-pub fn get_mac() -> Result<Option<MacAddress>, MacAddressError> {
-    let mut addresses = MacAddresses::new()?;
-
-    Ok(addresses.next())
-}
-
-pub fn get_mac_from_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
-    let addresses = MacAddresses::with_loopback(true)?;
-
-    let mut iter = addresses.filter(|x| match x.name() {
-        Some(n) => n == name,
-        None => false,
-    });
-
-    Ok(iter.next())
 }
 
 unsafe fn get_utf16_bytes(ptr: *mut u16) -> Vec<u16> {
