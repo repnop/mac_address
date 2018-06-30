@@ -4,7 +4,7 @@
 //!
 //! Supported platforms: Linux, Windows, MacOS
 
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 #[cfg(target_os = "windows")]
 extern crate winapi;
@@ -13,12 +13,13 @@ extern crate winapi;
 extern crate nix;
 
 #[cfg(target_os = "windows")]
-#[path = "windows/mod.rs"]
+#[path = "windows\\mod.rs"]
 mod os;
-
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 #[path = "linux.rs"]
 mod os;
+
+pub use os::MacAddresses;
 
 /// Possible errors when attempting to retrieve a MAC address.
 ///
@@ -43,8 +44,8 @@ impl std::fmt::Display for MacAddressError {
         write!(
             f,
             "{}",
-            match self {
-                &InternalError => "Internal API error",
+            match *self {
+                InternalError => "Internal API error",
             }
         )?;
 
@@ -56,53 +57,50 @@ impl std::error::Error for MacAddressError {
     fn description(&self) -> &str {
         use MacAddressError::*;
 
-        match self {
-            &InternalError => "Internal API error",
+        match *self {
+            InternalError => "Internal API error",
         }
     }
 }
 
 /// Contains the individual bytes of the MAC address.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MacAddress {
     bytes: [u8; 6],
+    name: Option<String>,
 }
 
 impl MacAddress {
     /// Creates a new `MacAddress` struct from the given bytes.
-    pub fn new(bytes: [u8; 6]) -> MacAddress {
-        MacAddress { bytes }
+    pub fn new(bytes: [u8; 6], name: Option<String>) -> Self {
+        Self { bytes, name }
+    }
+
+    /// Returns the array of MAC address bytes.
+    pub fn bytes(&self) -> [u8; 6] {
+        self.bytes
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_ref().map(|x| x.as_str())
     }
 }
 
 /// Calls the OS-specific function for retrieving the MAC address of the first
 /// network device containing one, ignoring local-loopback.
 pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
-    let bytes = os::get_mac()?;
+    let address = os::get_mac()?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
+    Ok(address)
 }
 
 /// Attempts to look up the MAC address of an interface via the specified name.
 /// **NOTE**: On Windows, this uses the `FriendlyName` field of the adapter, which
 /// is the same name shown in the "Network Connections" Control Panel screen.
 pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
-    let bytes = os::get_mac_from_name(name)?;
+    let address = os::get_mac_from_name(name)?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
-}
-
-impl MacAddress {
-    /// Returns the array of MAC address bytes.
-    pub fn bytes(&self) -> [u8; 6] {
-        self.bytes
-    }
+    Ok(address)
 }
 
 impl std::fmt::Display for MacAddress {

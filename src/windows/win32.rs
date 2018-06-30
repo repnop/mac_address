@@ -419,9 +419,9 @@ pub const NL_DAD_STATE_IpDadStateDuplicate: NL_DAD_STATE = 2;
 pub const NL_DAD_STATE_IpDadStateDeprecated: NL_DAD_STATE = 3;
 pub const NL_DAD_STATE_IpDadStatePreferred: NL_DAD_STATE = 4;
 pub type NL_DAD_STATE = i32;
+pub use self::NL_DAD_STATE as IP_DAD_STATE;
 pub use self::NL_PREFIX_ORIGIN as IP_PREFIX_ORIGIN;
 pub use self::NL_SUFFIX_ORIGIN as IP_SUFFIX_ORIGIN;
-pub use self::NL_DAD_STATE as IP_DAD_STATE;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct _IP_ADAPTER_UNICAST_ADDRESS_LH {
