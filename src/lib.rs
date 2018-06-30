@@ -84,6 +84,10 @@ impl MacAddress {
     pub fn name(&self) -> Option<&str> {
         self.name.as_ref().map(|x| x.as_str())
     }
+
+    pub fn is_loopback(&self) -> bool {
+        !self.bytes.iter().any(|&x| x != 0)
+    }
 }
 
 /// Calls the OS-specific function for retrieving the MAC address of the first

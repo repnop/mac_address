@@ -87,22 +87,14 @@ impl Iterator for MacAddresses {
                 }
             }
 
-            // If its not local-loopback (MAC address = all zeroes), return it
-            let ret_val = if bytes.iter().any(|&x| x != 0) {
-                let adapt_name =
-                    String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) }).ok();
+            let adapt_name =
+                String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) }).ok();
+            let ret_val = Some(MacAddress::new(bytes, adapt_name));
 
-                Some(MacAddress::new(bytes, adapt_name))
-            } else {
-                None
-            };
-
-            // Otherwise go to the next device
+            // Go to the next device
             self.ptr = unsafe { (*self.ptr).Next };
 
-            if ret_val.is_some() {
-                break ret_val;
-            }
+            break ret_val;
         }
     }
 }
@@ -112,9 +104,11 @@ impl Iterator for MacAddresses {
 /// then loops over the returned list until it finds a network device with a MAC address,
 /// and returns it. If it fails to find a device, it returns a `NoDevicesFound` error.
 pub fn get_mac() -> Result<Option<MacAddress>, MacAddressError> {
-    let mut addresses = MacAddresses::new()?;
+    let addresses = MacAddresses::new()?;
 
-    Ok(addresses.next())
+    let mut iter = addresses.filter(|x| !x.is_loopback());
+
+    Ok(iter.next())
 }
 
 pub fn get_mac_from_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
