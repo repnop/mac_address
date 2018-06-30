@@ -13,10 +13,10 @@ use winapi::shared::{winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
 
 const GAA_FLAG_NONE: win::ULONG = 0x0000;
 
+/// Iterator for all MAC addresses on the running machine.
+///
 /// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
-/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
-/// then loops over the returned list until it finds a network device with a MAC address,
-/// and returns it. If it fails to find a device, it returns a `NoDevicesFound` error.
+/// list with [GetAdaptersAddresses](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx).
 pub struct MacAddresses {
     #[allow(dead_code)]
     adapters_list: Vec<u8>,
@@ -25,10 +25,14 @@ pub struct MacAddresses {
 }
 
 impl MacAddresses {
+    /// Create a new `MacAddresses` iterator without local-loopback addresses.
     pub fn new() -> Result<Self, MacAddressError> {
         Self::with_loopback(false)
     }
 
+    /// Create a new `MacAddresses` iterator.
+    ///
+    /// Optionally include local-loopback addresses with `include_loopback`.
     pub fn with_loopback(include_loopback: bool) -> Result<Self, MacAddressError> {
         let mut buf_len = 0;
 

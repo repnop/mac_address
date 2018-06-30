@@ -3,19 +3,24 @@ use nix::{
     ifaddrs::{getifaddrs, InterfaceAddressIterator}, sys::socket::SockAddr,
 };
 
+/// Iterator for all MAC addresses on the running machine.
+///
+/// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
+/// host device.
 pub struct MacAddresses {
     iter: InterfaceAddressIterator,
     include_loopback: bool,
 }
 
-/// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
-/// host device and returns the first MAC address listed that isn't
-/// local-loopback.
 impl MacAddresses {
+    /// Create a new `MacAddresses` iterator without local-loopback addresses.
     pub fn new() -> Result<Self, MacAddressError> {
         Self::with_loopback(false)
     }
 
+    /// Create a new `MacAddresses` iterator.
+    ///
+    /// Optionally include local-loopback addresses with `include_loopback`.
     pub fn with_loopback(include_loopback: bool) -> Result<Self, MacAddressError> {
         let iter = getifaddrs()?;
 

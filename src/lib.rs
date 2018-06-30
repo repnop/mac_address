@@ -4,7 +4,7 @@
 //!
 //! Supported platforms: Linux, Windows, MacOS
 
-//#![deny(missing_docs)]
+#![deny(missing_docs)]
 
 #[cfg(target_os = "windows")]
 extern crate winapi;
@@ -63,7 +63,8 @@ impl std::error::Error for MacAddressError {
     }
 }
 
-/// Contains the individual bytes of the MAC address.
+/// Contains the individual bytes of the MAC address, along with the adapter
+/// name.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MacAddress {
     bytes: [u8; 6],
@@ -81,6 +82,10 @@ impl MacAddress {
         self.bytes
     }
 
+    /// Returns the name of the interface.
+    ///
+    /// **NOTE**: On Windows, this uses the `FriendlyName` field of the adapter, which
+    /// is the same name shown in the "Network Connections" Control Panel screen.
     pub fn name(&self) -> Option<&str> {
         self.name.as_ref().map(|x| x.as_str())
     }
