@@ -7,7 +7,9 @@
 
 Supported platforms: Linux, Windows, MacOS
 
-## Example
+## Examples
+
+### Get first non-loopback address
 
 ```rust
 extern crate mac_address;
@@ -22,6 +24,22 @@ fn main() {
         }
         Ok(None) => println!("No MAC address found."),
         Err(e) => println!("{:?}", e),
+    }
+}
+```
+
+### Iterate over all MAC addresses
+
+```rust
+extern crate mac_address;
+
+use mac_address::MacAddresses;
+
+fn main() {
+    let addresses = MacAddresses::new().unwrap();
+
+    for address in addresses {
+        println!("{}", address)
     }
 }
 ```
