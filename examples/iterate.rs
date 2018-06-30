@@ -1,9 +1,7 @@
 extern crate mac_address;
 
 use mac_address::MacAddresses;
-use std::{
-    io::{self, Write}, process,
-};
+use std::io::{self, Write};
 
 const WRITE_ERR: &str = "Error writing to stdout";
 

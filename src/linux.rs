@@ -46,7 +46,7 @@ impl Iterator for MacAddresses {
                         continue;
                     }
 
-                    return Some(MacAddress::new(bytes, Some(interface.interface_name)));
+                    return Some(MacAddress::with_name(bytes, interface.interface_name));
                 }
             }
         }

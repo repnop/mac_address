@@ -73,8 +73,16 @@ pub struct MacAddress {
 
 impl MacAddress {
     /// Creates a new `MacAddress` struct from the given bytes.
-    pub fn new(bytes: [u8; 6], name: Option<String>) -> Self {
-        Self { bytes, name }
+    pub fn new(bytes: [u8; 6]) -> Self {
+        Self { bytes, name: None }
+    }
+
+    /// Creates a new `MacAddress` struct from the given bytes and provided name.
+    pub fn with_name(bytes: [u8; 6], name: String) -> Self {
+        Self {
+            bytes,
+            name: Some(name),
+        }
     }
 
     /// Returns the array of MAC address bytes.

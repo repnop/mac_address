@@ -107,10 +107,13 @@ impl Iterator for MacAddresses {
             let ret_val = if !self.include_loopback && !bytes.iter().any(|&x| x != 0) {
                 None
             } else {
-                let adapt_name =
-                    String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) }).ok();
-
-                Some(MacAddress::new(bytes, adapt_name))
+                Some(
+                    match String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) })
+                    {
+                        Ok(name) => MacAddress::with_name(bytes, name),
+                        Err(_) => MacAddress::new(bytes),
+                    },
+                )
             };
 
             // Go to the next device
