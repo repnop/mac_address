@@ -19,10 +19,15 @@ pub struct MacAddresses {
     #[allow(dead_code)]
     adapters_list: Vec<u8>,
     ptr: PIP_ADAPTER_ADDRESSES,
+    include_loopback: bool,
 }
 
 impl MacAddresses {
     pub fn new() -> Result<Self, MacAddressError> {
+        Self::with_loopback(false)
+    }
+
+    pub fn with_loopback(include_loopback: bool) -> Result<Self, MacAddressError> {
         let mut buf_len = 0;
 
         // This will get the number of bytes we need to allocate for all devices
@@ -38,7 +43,7 @@ impl MacAddresses {
 
         // Allocate `buf_len` bytes, and create a raw pointer to it
         let mut adapters_list = vec![0u8; buf_len as usize];
-        let adapter_addresses: PIP_ADAPTER_ADDRESSES = adapters_list.as_mut_ptr() as *mut _;
+        let adapter_addresses = adapters_list.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
 
         // Get our list of adapters
         let result = unsafe {
@@ -50,7 +55,7 @@ impl MacAddresses {
                 // [IN] Reserved
                 null_mut(),
                 // [INOUT] AdapterAddresses
-                adapter_addresses as *mut _,
+                adapter_addresses,
                 // [INOUT] SizePointer
                 &mut buf_len,
             )
@@ -64,7 +69,11 @@ impl MacAddresses {
         // Pointer to the current location in the linked list
         let ptr = adapters_list.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
 
-        Ok(Self { adapters_list, ptr })
+        Ok(Self {
+            adapters_list,
+            ptr,
+            include_loopback,
+        })
     }
 }
 
@@ -87,14 +96,23 @@ impl Iterator for MacAddresses {
                 }
             }
 
-            let adapt_name =
-                String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) }).ok();
-            let ret_val = Some(MacAddress::new(bytes, adapt_name));
+            // If the user does not want local-loopback (MAC address = all zeroes), continue
+            // to next device.
+            let ret_val = if !self.include_loopback && !bytes.iter().any(|&x| x != 0) {
+                None
+            } else {
+                let adapt_name =
+                    String::from_utf16(unsafe { &get_utf16_bytes((*self.ptr).FriendlyName) }).ok();
+
+                Some(MacAddress::new(bytes, adapt_name))
+            };
 
             // Go to the next device
             self.ptr = unsafe { (*self.ptr).Next };
 
-            break ret_val;
+            if ret_val.is_some() {
+                break ret_val;
+            }
         }
     }
 }
@@ -104,15 +122,13 @@ impl Iterator for MacAddresses {
 /// then loops over the returned list until it finds a network device with a MAC address,
 /// and returns it. If it fails to find a device, it returns a `NoDevicesFound` error.
 pub fn get_mac() -> Result<Option<MacAddress>, MacAddressError> {
-    let addresses = MacAddresses::new()?;
+    let mut addresses = MacAddresses::new()?;
 
-    let mut iter = addresses.filter(|x| !x.is_loopback());
-
-    Ok(iter.next())
+    Ok(addresses.next())
 }
 
 pub fn get_mac_from_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
-    let addresses = MacAddresses::new()?;
+    let addresses = MacAddresses::with_loopback(true)?;
 
     let mut iter = addresses.filter(|x| match x.name() {
         Some(n) => n == name,
