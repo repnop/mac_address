@@ -20,6 +20,9 @@ mod os;
 #[path = "linux.rs"]
 mod os;
 
+mod iter;
+pub use iter::MacAddressIterator;
+
 /// Possible errors when attempting to retrieve a MAC address.
 ///
 /// Eventually will expose more detailed error information.
@@ -78,7 +81,7 @@ impl MacAddress {
 /// Calls the OS-specific function for retrieving the MAC address of the first
 /// network device containing one, ignoring local-loopback.
 pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
-    let bytes = os::get_mac()?;
+    let bytes = os::get_mac(None)?;
 
     Ok(match bytes {
         Some(b) => Some(MacAddress { bytes: b }),
@@ -90,7 +93,7 @@ pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
 /// **NOTE**: On Windows, this uses the `FriendlyName` field of the adapter, which
 /// is the same name shown in the "Network Connections" Control Panel screen.
 pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
-    let bytes = os::get_mac_from_name(name)?;
+    let bytes = os::get_mac(Some(name))?;
 
     Ok(match bytes {
         Some(b) => Some(MacAddress { bytes: b }),
