@@ -108,6 +108,24 @@ impl MacAddress {
     }
 }
 
+impl std::str::FromStr for MacAddress {
+    type Err = &'static str;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut array = [0u8; 6];
+        for (nth, byte) in input.split(':').enumerate() {
+            if nth == 6 {
+                return Err("mac address is larger than six bytes");
+            }
+
+            array[nth] = u8::from_str_radix(byte, 16)
+                .map_err(|_| "hex bit was not valid")?;
+        }
+
+        Ok(MacAddress::new(array))
+    }
+}
+
 impl std::fmt::Display for MacAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let _ = write!(
@@ -122,5 +140,18 @@ impl std::fmt::Display for MacAddress {
         );
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_str() {
+        let string = "80:FA:5B:41:10:6B";
+        let address = string.parse::<MacAddress>().unwrap();
+        assert_eq!(address.bytes(), [128, 250, 91, 65, 16, 107]);
+        assert_eq!(&format!("{}", address), string);
     }
 }
