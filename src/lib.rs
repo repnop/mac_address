@@ -65,6 +65,26 @@ impl std::error::Error for MacAddressError {
     }
 }
 
+/// An error that may occur when parsing a MAC address string.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum MacParseError {
+    /// Parsing of the MAC address contained an invalid digit.
+    InvalidDigit,
+    /// The MAC address did not have the correct length.
+    InvalidLength
+}
+
+impl std::fmt::Display for MacParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str(match *self {
+            MacParseError::InvalidDigit => "invalid digit",
+            MacParseError::InvalidLength => "invalid length",
+        })
+    }
+}
+
+impl std::error::Error for MacParseError {}
+
 /// Contains the individual bytes of the MAC address.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MacAddress {
@@ -108,6 +128,32 @@ impl MacAddress {
     }
 }
 
+impl std::str::FromStr for MacAddress {
+    type Err = MacParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let mut array = [0u8; 6];
+
+        let mut nth = 0;
+        for byte in input.split(':') {
+            if nth == 6 {
+                return Err(MacParseError::InvalidLength);
+            }
+
+            array[nth] = u8::from_str_radix(byte, 16)
+                .map_err(|_| MacParseError::InvalidDigit)?;
+
+            nth += 1;
+        }
+
+        if nth != 6 {
+            return Err(MacParseError::InvalidLength);
+        }
+
+        Ok(MacAddress::new(array))
+    }
+}
+
 impl std::fmt::Display for MacAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let _ = write!(
@@ -122,5 +168,36 @@ impl std::fmt::Display for MacAddress {
         );
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_str() {
+        let string = "80:FA:5B:41:10:6B";
+        let address = string.parse::<MacAddress>().unwrap();
+        assert_eq!(address.bytes(), [128, 250, 91, 65, 16, 107]);
+        assert_eq!(&format!("{}", address), string);
+    }
+
+    #[test]
+    fn parse_invalid_length() {
+        let string = "80:FA:5B:41:10:6B:AC";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidLength, address);
+
+        let string = "80:FA:5B:41";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidLength, address);
+    }
+
+    #[test]
+    fn parse_invalid_digit() {
+        let string = "80:FA:ZZ:41:10:6B:AC";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidDigit, address);
     }
 }
