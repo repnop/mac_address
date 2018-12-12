@@ -47,7 +47,7 @@ impl std::fmt::Display for MacAddressError {
             f,
             "{}",
             match self {
-                &InternalError => "Internal API error",
+                InternalError => "Internal API error",
             }
         )?;
 
@@ -60,7 +60,7 @@ impl std::error::Error for MacAddressError {
         use MacAddressError::*;
 
         match self {
-            &InternalError => "Internal API error",
+            InternalError => "Internal API error",
         }
     }
 }
@@ -71,7 +71,7 @@ pub enum MacParseError {
     /// Parsing of the MAC address contained an invalid digit.
     InvalidDigit,
     /// The MAC address did not have the correct length.
-    InvalidLength
+    InvalidLength,
 }
 
 impl std::fmt::Display for MacParseError {
@@ -123,7 +123,7 @@ pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressE
 
 impl MacAddress {
     /// Returns the array of MAC address bytes.
-    pub fn bytes(&self) -> [u8; 6] {
+    pub fn bytes(self) -> [u8; 6] {
         self.bytes
     }
 }
@@ -140,8 +140,7 @@ impl std::str::FromStr for MacAddress {
                 return Err(MacParseError::InvalidLength);
             }
 
-            array[nth] = u8::from_str_radix(byte, 16)
-                .map_err(|_| MacParseError::InvalidDigit)?;
+            array[nth] = u8::from_str_radix(byte, 16).map_err(|_| MacParseError::InvalidDigit)?;
 
             nth += 1;
         }
