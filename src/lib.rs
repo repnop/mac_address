@@ -135,7 +135,7 @@ impl std::str::FromStr for MacAddress {
         let mut array = [0u8; 6];
 
         let mut nth = 0;
-        for byte in input.split(':') {
+        for byte in input.split(|c| c == ':' || c == '-') {
             if nth == 6 {
                 return Err(MacParseError::InvalidLength);
             }
@@ -175,11 +175,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_str() {
+    fn parse_str_colon() {
         let string = "80:FA:5B:41:10:6B";
         let address = string.parse::<MacAddress>().unwrap();
         assert_eq!(address.bytes(), [128, 250, 91, 65, 16, 107]);
         assert_eq!(&format!("{}", address), string);
+    }
+
+    #[test]
+    fn parse_str_hyphen() {
+        let string = "01-23-45-67-89-AB";
+        let address = string.parse::<MacAddress>().unwrap();
+        assert_eq!(address.bytes(), [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB]);
+        assert_eq!(format!("{}", address), string.replace("-", ":"));
     }
 
     #[test]
