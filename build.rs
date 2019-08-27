@@ -1,4 +1,11 @@
+use std::env;
+
 fn main() {
-    #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=iphlpapi");
+    let target = match env::var("TARGET") {
+        Err(e) => {eprintln!("Err:Can't get env variable. {:?}", e); "NO TARGET".to_string()},
+        Ok(val) => val,
+    };
+    if target.contains("windows") {
+        println!("cargo:rustc-link-lib=iphlpapi");
+    }
 }
