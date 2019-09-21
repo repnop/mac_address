@@ -1,4 +1,6 @@
 fn main() {
-    #[cfg(target_os = "windows")]
-    println!("cargo:rustc-link-lib=iphlpapi");
+    match std::env::var("TARGET") {
+        Ok(ref t) if t.contains("windows") => println!("cargo:rustc-link-lib=iphlpapi"),
+        _ => {}
+    }
 }
