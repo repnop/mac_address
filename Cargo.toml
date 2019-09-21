@@ -12,7 +12,7 @@ keywords = ["mac", "address", "network", "interface"]
 [dependencies]
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
-nix = "0.11"
+nix = "0.15"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winerror", "ws2def"] }
