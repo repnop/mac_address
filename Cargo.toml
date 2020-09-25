@@ -1,6 +1,6 @@
 [package]
 name = "mac_address"
-version = "1.0.3"
+version = "1.0.4"
 authors = ["rep-nop <repnop@outlook.com>"]
 build = "build.rs"
 description = "Cross-platform retrieval of a network interface MAC address."
@@ -12,7 +12,7 @@ keywords = ["mac", "address", "network", "interface"]
 [dependencies]
 
 [target.'cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))'.dependencies]
-nix = "0.16"
+nix = "0.18.0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winerror", "ws2def"] }
