@@ -2,21 +2,21 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows, MacOS
+//! Supported platforms: Linux, Windows, MacOS, FreeBSD
 
 #![deny(missing_docs)]
 
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 extern crate nix;
 
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
 mod os;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 #[path = "linux.rs"]
 mod os;
 
@@ -32,7 +32,7 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError

@@ -2,7 +2,7 @@
 #[path = "windows.rs"]
 mod internal;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 #[path = "linux.rs"]
 mod internal;
 
