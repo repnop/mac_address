@@ -1,6 +1,6 @@
 [package]
 name = "mac_address"
-version = "1.0.4"
+version = "1.1.0"
 authors = ["rep-nop <repnop@outlook.com>"]
 build = "build.rs"
 description = "Cross-platform retrieval of a network interface MAC address."
@@ -10,9 +10,14 @@ license = "MIT OR Apache-2.0"
 keywords = ["mac", "address", "network", "interface"]
 
 [dependencies]
+serde = { version = "1.0.117", features = ["derive"], optional = true }
 
 [target.'cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))'.dependencies]
-nix = "0.18.0"
+nix = "0.19.0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winerror", "ws2def"] }
+
+[dev-dependencies]
+serde_test = "1.0.117"
+serde_json = "1.0.59"

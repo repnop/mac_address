@@ -12,6 +12,12 @@ extern crate winapi;
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 extern crate nix;
 
+#[cfg(test)]
+extern crate serde_test;
+
+#[cfg(test)]
+extern crate serde_json;
+
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
 mod os;
@@ -87,6 +93,8 @@ impl std::error::Error for MacParseError {}
 
 /// Contains the individual bytes of the MAC address.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(try_from = "&str"))]
 pub struct MacAddress {
     bytes: [u8; 6],
 }
@@ -97,6 +105,26 @@ impl MacAddress {
         MacAddress { bytes }
     }
 }
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for MacAddress {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.collect_str(self)
+    }
+}
+
+//#[cfg(feature = "serde")]
+//impl<'de> serde::Deserialize<'de> for MacAddress {
+//    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//    where
+//        D: serde::Deserializer<'de>,
+//    {
+//        deserializer.
+//    }
+//}
 
 /// Calls the OS-specific function for retrieving the MAC address of the first
 /// network device containing one, ignoring local-loopback.
@@ -153,6 +181,14 @@ impl std::str::FromStr for MacAddress {
     }
 }
 
+impl std::convert::TryFrom<&'_ str> for MacAddress {
+    type Error = MacParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
 impl std::fmt::Display for MacAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let _ = write!(
@@ -206,5 +242,27 @@ mod tests {
         let string = "80:FA:ZZ:41:10:6B:AC";
         let address = string.parse::<MacAddress>().unwrap_err();
         assert_eq!(MacParseError::InvalidDigit, address);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serde_works() {
+        use serde_test::{assert_tokens, Token};
+        let mac: MacAddress = "80:FA:5B:41:10:6B".parse().unwrap();
+
+        assert_tokens(&mac, &[Token::BorrowedStr("80:FA:5B:41:10:6B")]);
+
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct Test {
+            mac: MacAddress,
+        }
+
+        assert_eq!(
+            serde_json::to_string(&Test { mac }).unwrap(),
+            serde_json::to_string::<Test>(
+                &serde_json::from_str("{ \"mac\": \"80:FA:5B:41:10:6B\" }").unwrap()
+            )
+            .unwrap(),
+        );
     }
 }
