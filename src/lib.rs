@@ -106,6 +106,12 @@ impl MacAddress {
     }
 }
 
+impl From<[u8; 6]> for MacAddress {
+    fn from(v: [u8; 6]) -> Self {
+        MacAddress::new(v)
+    }
+}
+
 #[cfg(feature = "serde")]
 impl serde::Serialize for MacAddress {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -115,16 +121,6 @@ impl serde::Serialize for MacAddress {
         serializer.collect_str(self)
     }
 }
-
-//#[cfg(feature = "serde")]
-//impl<'de> serde::Deserialize<'de> for MacAddress {
-//    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//    where
-//        D: serde::Deserializer<'de>,
-//    {
-//        deserializer.
-//    }
-//}
 
 /// Calls the OS-specific function for retrieving the MAC address of the first
 /// network device containing one, ignoring local-loopback.

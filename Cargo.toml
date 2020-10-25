@@ -1,6 +1,6 @@
 [package]
 name = "mac_address"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["rep-nop <repnop@outlook.com>"]
 build = "build.rs"
 description = "Cross-platform retrieval of a network interface MAC address."
