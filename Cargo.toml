@@ -2,7 +2,6 @@
 name = "mac_address"
 version = "1.1.1"
 authors = ["rep-nop <repnop@outlook.com>"]
-build = "build.rs"
 description = "Cross-platform retrieval of a network interface MAC address."
 repository = "https://github.com/rep-nop/mac_address"
 readme = "README.md"
@@ -16,7 +15,7 @@ serde = { version = "1.0.117", features = ["derive"], optional = true }
 nix = "0.19.0"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winerror", "ws2def"] }
+winapi = { version = "0.3", features = ["winerror", "ws2def", "iphlpapi"] }
 
 [dev-dependencies]
 serde_test = "1.0.117"
