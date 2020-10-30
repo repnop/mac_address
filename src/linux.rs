@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use crate::MacAddressError;
 use nix::{ifaddrs::*, sys::socket::SockAddr};
-use MacAddressError;
 
 /// Uses the `getifaddrs` call to retrieve a list of network interfaces on the
 /// host device and returns the first MAC address listed that isn't
