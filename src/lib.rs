@@ -7,18 +7,6 @@
 #![deny(missing_docs)]
 
 #[cfg(target_os = "windows")]
-extern crate winapi;
-
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
-extern crate nix;
-
-#[cfg(test)]
-extern crate serde_test;
-
-#[cfg(test)]
-extern crate serde_json;
-
-#[cfg(target_os = "windows")]
 #[path = "windows.rs"]
 mod os;
 

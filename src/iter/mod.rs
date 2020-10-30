@@ -6,4 +6,4 @@ mod internal;
 #[path = "linux.rs"]
 mod internal;
 
-pub use self::internal::MacAddressIterator;
+pub use internal::MacAddressIterator;

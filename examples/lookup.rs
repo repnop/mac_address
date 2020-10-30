@@ -1,5 +1,3 @@
-extern crate mac_address;
-
 use mac_address::mac_address_by_name;
 
 fn main() {
