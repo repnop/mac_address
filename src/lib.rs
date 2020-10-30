@@ -231,12 +231,13 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn serde_works() {
+        use serde::{Deserialize, Serialize};
         use serde_test::{assert_tokens, Token};
         let mac: MacAddress = "80:FA:5B:41:10:6B".parse().unwrap();
 
         assert_tokens(&mac, &[Token::BorrowedStr("80:FA:5B:41:10:6B")]);
 
-        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Serialize, Deserialize)]
         struct Test {
             mac: MacAddress,
         }

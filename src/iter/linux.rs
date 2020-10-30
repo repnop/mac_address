@@ -1,5 +1,5 @@
+use crate::{MacAddress, MacAddressError};
 use nix::{ifaddrs, sys::socket::SockAddr};
-use {MacAddress, MacAddressError};
 
 /// An iterator over all available MAC addresses on the system.
 pub struct MacAddressIterator {
