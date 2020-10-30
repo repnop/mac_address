@@ -1,7 +1,12 @@
+use core::convert::TryInto;
 use std::{ffi::OsString, os::windows::ffi::OsStringExt, ptr, slice};
 use winapi::shared::{ntdef::ULONG, winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
-use winapi::um::{iphlpapi::GetAdaptersAddresses, iptypes::PIP_ADAPTER_ADDRESSES};
-use MacAddressError;
+use winapi::um::{
+    iphlpapi::GetAdaptersAddresses,
+    iptypes::{IP_ADAPTER_ADDRESSES_LH, PIP_ADAPTER_ADDRESSES},
+};
+
+use crate::MacAddressError;
 
 const GAA_FLAG_NONE: ULONG = 0x0000;
 
@@ -22,15 +27,12 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
             break;
         }
 
-        // Copy over the 6 MAC address bytes to the buffer.
-        // PhysicalAddress is a `[u8; 8]`, until `TryFrom` stabilizes, this
-        // is the easiest way to turn it into a `[u8; 6]`.
-        let bytes = unsafe { *((&(*ptr).PhysicalAddress).as_ptr() as *const [u8; 6]) };
+        let bytes = unsafe { convert_mac_bytes(ptr) };
 
         if let Some(name) = name {
             let adapter_name = unsafe { construct_string((*ptr).FriendlyName) };
 
-            if &adapter_name == name {
+            if adapter_name == name {
                 return Ok(Some(bytes));
             }
         } else if bytes.iter().any(|&x| x != 0) {
@@ -42,6 +44,11 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
     }
 
     Ok(None)
+}
+
+/// Copy over the 6 MAC address bytes to the buffer.
+pub(crate) unsafe fn convert_mac_bytes(ptr: *mut IP_ADAPTER_ADDRESSES_LH) -> [u8; 6] {
+    ((*ptr).PhysicalAddress)[..6].try_into().unwrap()
 }
 
 pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {

@@ -2,6 +2,7 @@
 name = "mac_address"
 version = "1.1.1"
 authors = ["rep-nop <repnop@outlook.com>"]
+edition = "2018"
 description = "Cross-platform retrieval of a network interface MAC address."
 repository = "https://github.com/rep-nop/mac_address"
 readme = "README.md"

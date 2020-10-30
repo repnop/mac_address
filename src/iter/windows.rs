@@ -1,21 +1,22 @@
+use crate::os;
+use crate::{MacAddress, MacAddressError};
 use winapi::um::iptypes::PIP_ADAPTER_ADDRESSES;
-use {MacAddress, MacAddressError};
 
 /// An iterator over all available MAC addresses on the system.
 pub struct MacAddressIterator {
-    #[allow(dead_code)]
-    buffer: Vec<u8>,
+    // So we don't UAF during iteration.
+    _buffer: Vec<u8>,
     ptr: PIP_ADAPTER_ADDRESSES,
 }
 
 impl MacAddressIterator {
     /// Creates a new `MacAddressIterator`.
     pub fn new() -> Result<MacAddressIterator, MacAddressError> {
-        let mut adapters = ::os::get_adapters()?;
+        let mut adapters = os::get_adapters()?;
         let ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
 
         Ok(Self {
-            buffer: adapters,
+            _buffer: adapters,
             ptr,
         })
     }
@@ -28,9 +29,8 @@ impl Iterator for MacAddressIterator {
         if self.ptr.is_null() {
             None
         } else {
-            // PhysicalAddress is a `[u8; 8]`, until `TryFrom` stabilizes, this
-            // is the easiest way to turn it into a `[u8; 6]`.
-            let bytes = unsafe { *((&(*self.ptr).PhysicalAddress).as_ptr() as *const [u8; 6]) };
+            let bytes = unsafe { os::convert_mac_bytes(self.ptr) };
+
             self.ptr = unsafe { (*self.ptr).Next };
 
             Some(MacAddress::new(bytes))
