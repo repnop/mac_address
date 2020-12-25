@@ -46,6 +46,34 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
     Ok(None)
 }
 
+pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
+    let mut adapters = get_adapters()?;
+    // Pointer to the current location in the linked list
+    let mut ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
+
+    loop {
+        // Break if we've gone through all devices
+        if ptr.is_null() {
+            break;
+        }
+
+        let bytes = unsafe { convert_mac_bytes(ptr) };
+
+        if &bytes == mac {
+            let adapter_name = unsafe { construct_string((*ptr).FriendlyName) };
+            let adapter_name = adapter_name
+                .into_string()
+                .map_err(|_| MacAddressError::InternalError)?;
+            return Ok(Some(adapter_name));
+        }
+
+        // Otherwise go to the next device
+        ptr = unsafe { (*ptr).Next };
+    }
+
+    Ok(None)
+}
+
 /// Copy over the 6 MAC address bytes to the buffer.
 pub(crate) unsafe fn convert_mac_bytes(ptr: *mut IP_ADAPTER_ADDRESSES_LH) -> [u8; 6] {
     ((*ptr).PhysicalAddress)[..6].try_into().unwrap()

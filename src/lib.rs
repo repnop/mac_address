@@ -133,6 +133,11 @@ pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressE
     })
 }
 
+/// Attempts to look up the interface name via MAC address.
+pub fn name_by_mac_address(mac: &MacAddress) -> Result<Option<String>, MacAddressError> {
+    os::get_ifname(&mac.bytes)
+}
+
 impl MacAddress {
     /// Returns the array of MAC address bytes.
     pub fn bytes(self) -> [u8; 6] {
@@ -249,5 +254,14 @@ mod tests {
             )
             .unwrap(),
         );
+    }
+
+    #[test]
+    fn convert() {
+        for mac in MacAddressIterator::new().unwrap() {
+            let name = name_by_mac_address(&mac).unwrap().unwrap();
+            let mac2 = mac_address_by_name(&name).unwrap().unwrap();
+            assert_eq!(mac, mac2);
+        }
     }
 }
