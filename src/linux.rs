@@ -27,3 +27,21 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
 
     Ok(None)
 }
+
+pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
+    let ifiter = getifaddrs()?;
+
+    for interface in ifiter {
+        if let Some(address) = interface.address {
+            if let SockAddr::Link(link) = address {
+                let bytes = link.addr();
+
+                if &bytes == mac {
+                    return Ok(Some(interface.interface_name));
+                }
+            }
+        }
+    }
+
+    Ok(None)
+}
