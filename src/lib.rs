@@ -80,7 +80,7 @@ impl std::fmt::Display for MacParseError {
 impl std::error::Error for MacParseError {}
 
 /// Contains the individual bytes of the MAC address.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(try_from = "&str"))]
 pub struct MacAddress {
