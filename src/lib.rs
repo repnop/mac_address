@@ -115,10 +115,7 @@ impl serde::Serialize for MacAddress {
 pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac(None)?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
+    Ok(bytes.map(|b| MacAddress { bytes: b }))
 }
 
 /// Attempts to look up the MAC address of an interface via the specified name.
@@ -127,10 +124,7 @@ pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
 pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac(Some(name))?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
+    Ok(bytes.map(|b| MacAddress { bytes: b }))
 }
 
 /// Attempts to look up the interface name via MAC address.
