@@ -35,17 +35,9 @@ impl From<nix::Error> for MacAddressError {
 
 impl std::fmt::Display for MacAddressError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use MacAddressError::*;
-
-        write!(
-            f,
-            "{}",
-            match self {
-                InternalError => "Internal API error",
-            }
-        )?;
-
-        Ok(())
+        f.write_str(match self {
+            MacAddressError::InternalError => "Internal API error",
+        })
     }
 }
 
