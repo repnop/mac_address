@@ -41,15 +41,7 @@ impl std::fmt::Display for MacAddressError {
     }
 }
 
-impl std::error::Error for MacAddressError {
-    fn description(&self) -> &str {
-        use MacAddressError::*;
-
-        match self {
-            InternalError => "Internal API error",
-        }
-    }
-}
+impl std::error::Error for MacAddressError {}
 
 /// An error that may occur when parsing a MAC address string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
