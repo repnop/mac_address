@@ -35,29 +35,13 @@ impl From<nix::Error> for MacAddressError {
 
 impl std::fmt::Display for MacAddressError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use MacAddressError::*;
-
-        write!(
-            f,
-            "{}",
-            match self {
-                InternalError => "Internal API error",
-            }
-        )?;
-
-        Ok(())
+        f.write_str(match self {
+            MacAddressError::InternalError => "Internal API error",
+        })
     }
 }
 
-impl std::error::Error for MacAddressError {
-    fn description(&self) -> &str {
-        use MacAddressError::*;
-
-        match self {
-            InternalError => "Internal API error",
-        }
-    }
-}
+impl std::error::Error for MacAddressError {}
 
 /// An error that may occur when parsing a MAC address string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -115,10 +99,7 @@ impl serde::Serialize for MacAddress {
 pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac(None)?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
+    Ok(bytes.map(|b| MacAddress { bytes: b }))
 }
 
 /// Attempts to look up the MAC address of an interface via the specified name.
@@ -127,10 +108,7 @@ pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
 pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac(Some(name))?;
 
-    Ok(match bytes {
-        Some(b) => Some(MacAddress { bytes: b }),
-        None => None,
-    })
+    Ok(bytes.map(|b| MacAddress { bytes: b }))
 }
 
 /// Attempts to look up the interface name via MAC address.
