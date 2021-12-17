@@ -10,8 +10,6 @@ Supported platforms: Linux, Windows, MacOS, FreeBSD
 ## Example
 
 ```rust
-extern crate mac_address;
-
 use mac_address::get_mac_address;
 
 fn main() {
