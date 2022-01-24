@@ -66,7 +66,7 @@ impl std::error::Error for MacParseError {}
 /// Contains the individual bytes of the MAC address.
 #[derive(Debug, Clone, Copy, PartialEq, Default, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(try_from = "&str"))]
+#[cfg_attr(feature = "serde", serde(try_from = "std::borrow::Cow<'_, str>"))]
 pub struct MacAddress {
     bytes: [u8; 6],
 }
@@ -156,6 +156,14 @@ impl std::convert::TryFrom<&'_ str> for MacAddress {
     }
 }
 
+impl std::convert::TryFrom<std::borrow::Cow<'_, str>> for MacAddress {
+    type Error = MacParseError;
+
+    fn try_from(value: std::borrow::Cow<'_, str>) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
 impl std::fmt::Display for MacAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let _ = write!(
@@ -231,6 +239,24 @@ mod tests {
                 &serde_json::from_str("{ \"mac\": \"80:FA:5B:41:10:6B\" }").unwrap()
             )
             .unwrap(),
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serde_from_reader_works() {
+        use serde::{Deserialize, Serialize};
+        let mac: MacAddress = "80:FA:5B:41:10:6B".parse().unwrap();
+
+        #[derive(Serialize, Deserialize, PartialEq, Debug)]
+        struct Test {
+            mac: MacAddress,
+        }
+
+        assert_eq!(
+            Test { mac },
+            serde_json::from_reader(std::io::Cursor::new(r#"{ "mac": "80:FA:5B:41:10:6B" }"#))
+                .unwrap(),
         );
     }
 
