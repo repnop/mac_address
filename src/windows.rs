@@ -1,5 +1,5 @@
 use core::convert::TryInto;
-use std::{convert::TryFrom, ffi::OsString, os::windows::ffi::OsStringExt, ptr, slice};
+use std::{convert::TryFrom, ffi::CStr, ffi::OsString, os::windows::ffi::OsStringExt, ptr, slice};
 use winapi::shared::{ntdef::ULONG, winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
 use winapi::um::{iphlpapi::GetAdaptersAddresses, iptypes::IP_ADAPTER_ADDRESSES_LH};
 
@@ -36,6 +36,18 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
 
             if adapter_name == name {
                 return Ok(Some(bytes));
+            } else {
+                let adapter_name = unsafe { CStr::from_ptr((*ptr).AdapterName) };
+                match adapter_name.to_str() {
+                    Ok(str) => {
+                        if str.eq(name) {
+                            return Ok(Some(bytes));
+                        }
+                    }
+                    Err(_) => {
+                        return Err(MacAddressError::InternalError);
+                    }
+                }
             }
         } else if bytes.iter().any(|&x| x != 0) {
             return Ok(Some(bytes));
