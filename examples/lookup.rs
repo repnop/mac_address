@@ -4,7 +4,7 @@ fn main() {
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     let name = "eth0";
 
-    #[cfg(any(target_os = "freebsd"))]
+    #[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
     let name = "em0";
 
     #[cfg(target_os = "windows")]
