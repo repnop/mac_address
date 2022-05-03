@@ -2,7 +2,7 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows, MacOS, FreeBSD
+//! Supported platforms: Linux, Windows, MacOS, FreeBSD, OpenBSD
 
 #![deny(missing_docs)]
 
@@ -10,7 +10,7 @@
 #[path = "windows.rs"]
 mod os;
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
 #[path = "linux.rs"]
 mod os;
 
@@ -26,7 +26,7 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
