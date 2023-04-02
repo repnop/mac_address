@@ -13,6 +13,9 @@ fn main() {
     #[cfg(target_os = "windows")]
     let name = "Ethernet";
 
+    #[cfg(target_os = "android")]
+    let name = "wlan0";
+
     match mac_address_by_name(name) {
         Ok(Some(ma)) => {
             println!("MAC addr of {} = {}", name, ma);
