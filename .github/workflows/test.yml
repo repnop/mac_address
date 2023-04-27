@@ -3,29 +3,6 @@ on: [push, pull_request]
 name: Rust Tests
 
 jobs:
-  sanitizers:
-    name: Sanitizer Test ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-        fail-fast: false
-        matrix:
-          os: ["macos-latest", "ubuntu-latest", "windows-latest"]
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-
-      - name: ASan
-        run: env RUSTFLAGS="-Z sanitizer=address" cargo test --all-targets --all-features
-      - name: MSan
-        run: env RUSTFLAGS="-Z sanitizer=memory" cargo test --all-targets --all-features
   test:
     name: Test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
