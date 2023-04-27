@@ -1,25 +1,23 @@
 use core::convert::TryInto;
-use std::{ffi::OsString, os::windows::ffi::OsStringExt, ptr, slice};
+use std::{convert::TryFrom, ffi::OsString, os::windows::ffi::OsStringExt, ptr, slice};
 use winapi::shared::{ntdef::ULONG, winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
-use winapi::um::{
-    iphlpapi::GetAdaptersAddresses,
-    iptypes::{IP_ADAPTER_ADDRESSES_LH, PIP_ADAPTER_ADDRESSES},
-};
+use winapi::um::{iphlpapi::GetAdaptersAddresses, iptypes::IP_ADAPTER_ADDRESSES_LH};
 
 use crate::MacAddressError;
 
 const GAA_FLAG_NONE: ULONG = 0x0000;
 
-/// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
-/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
-/// then loops over the returned list until it finds a network device with a MAC address,
-/// and returns it.
+/// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface
+/// devices list with
+/// [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
+/// then loops over the returned list until it finds a network device with a MAC
+/// address, and returns it.
 ///
 /// If it fails to find a device, it returns a `NoDevicesFound` error.
 pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
-    let mut adapters = get_adapters()?;
-    // Pointer to the current location in the linked list
-    let mut ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
+    let adapters = get_adapters()?;
+    // Safety: We don't use the pointer after `adapters` is dropped
+    let mut ptr = unsafe { adapters.ptr() };
 
     loop {
         // Break if we've gone through all devices
@@ -47,9 +45,10 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
 }
 
 pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
-    let mut adapters = get_adapters()?;
-    // Pointer to the current location in the linked list
-    let mut ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
+    let adapters = get_adapters()?;
+
+    // Safety: We don't use the pointer after `adapters` is dropped
+    let mut ptr = unsafe { adapters.ptr() };
 
     loop {
         // Break if we've gone through all devices
@@ -79,7 +78,37 @@ pub(crate) unsafe fn convert_mac_bytes(ptr: *mut IP_ADAPTER_ADDRESSES_LH) -> [u8
     ((*ptr).PhysicalAddress)[..6].try_into().unwrap()
 }
 
-pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {
+pub(crate) struct AdaptersList {
+    ptr: *mut IP_ADAPTER_ADDRESSES_LH,
+    size: usize,
+}
+
+impl AdaptersList {
+    /// Safety: The pointer returned by this method MUST NOT be used after
+    /// `self` has gone out of scope. This pointer may also be null.
+    pub(crate) unsafe fn ptr(&self) -> *mut IP_ADAPTER_ADDRESSES_LH {
+        self.ptr
+    }
+}
+
+impl Drop for AdaptersList {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() && self.size != 0 {
+            unsafe {
+                std::alloc::dealloc(
+                    self.ptr as *mut u8,
+                    std::alloc::Layout::from_size_align(
+                        self.size,
+                        core::mem::align_of::<IP_ADAPTER_ADDRESSES_LH>(),
+                    )
+                    .unwrap(),
+                )
+            };
+        }
+    }
+}
+
+pub(crate) fn get_adapters() -> Result<AdaptersList, MacAddressError> {
     let mut buf_len = 0;
 
     // This will get the number of bytes we need to allocate for all devices
@@ -93,9 +122,24 @@ pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {
         );
     }
 
-    // Allocate `buf_len` bytes, and create a raw pointer to it
-    let mut adapters_list = vec![0u8; buf_len as usize];
-    let adapter_addresses: PIP_ADAPTER_ADDRESSES = adapters_list.as_mut_ptr() as *mut _;
+    if buf_len == 0 {
+        return Ok(AdaptersList {
+            ptr: ptr::null_mut(),
+            size: 0,
+        });
+    }
+
+    // Allocate `buf_len` bytes, and create a raw pointer to it with the correct alignment
+    // Safety:
+    let adapters_list: *mut IP_ADAPTER_ADDRESSES_LH = unsafe {
+        std::alloc::alloc(
+            std::alloc::Layout::from_size_align(
+                usize::try_from(buf_len).map_err(|_| MacAddressError::InternalError)?,
+                core::mem::align_of::<IP_ADAPTER_ADDRESSES_LH>(),
+            )
+            .unwrap(),
+        )
+    } as *mut IP_ADAPTER_ADDRESSES_LH;
 
     // Get our list of adapters
     let result = unsafe {
@@ -107,10 +151,16 @@ pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {
             // [IN] Reserved
             ptr::null_mut(),
             // [INOUT] AdapterAddresses
-            adapter_addresses as *mut _,
+            adapters_list,
             // [INOUT] SizePointer
             &mut buf_len,
         )
+    };
+
+    let adapters_list = AdaptersList {
+        ptr: adapters_list,
+        // Cast OK, we checked it above
+        size: buf_len as usize,
     };
 
     // Make sure we were successful
