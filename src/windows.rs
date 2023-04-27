@@ -27,10 +27,12 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
             break;
         }
 
-        let bytes = unsafe { convert_mac_bytes(ptr) };
+        let ip_addr = unsafe { ptr.read_unaligned() };
+
+        let bytes = unsafe { convert_mac_bytes(&ip_addr) };
 
         if let Some(name) = name {
-            let adapter_name = unsafe { construct_string((*ptr).FriendlyName) };
+            let adapter_name = unsafe { construct_string(ip_addr.FriendlyName) };
 
             if adapter_name == name {
                 return Ok(Some(bytes));
@@ -40,7 +42,7 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
         }
 
         // Otherwise go to the next device
-        ptr = unsafe { (*ptr).Next };
+        ptr = ip_addr.Next;
     }
 
     Ok(None)
@@ -57,10 +59,12 @@ pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
             break;
         }
 
-        let bytes = unsafe { convert_mac_bytes(ptr) };
+        let ip_addr = unsafe { ptr.read_unaligned() };
+
+        let bytes = unsafe { convert_mac_bytes(&ip_addr) };
 
         if &bytes == mac {
-            let adapter_name = unsafe { construct_string((*ptr).FriendlyName) };
+            let adapter_name = unsafe { construct_string(ip_addr.FriendlyName) };
             let adapter_name = adapter_name
                 .into_string()
                 .map_err(|_| MacAddressError::InternalError)?;
@@ -68,15 +72,15 @@ pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
         }
 
         // Otherwise go to the next device
-        ptr = unsafe { (*ptr).Next };
+        ptr = ip_addr.Next;
     }
 
     Ok(None)
 }
 
 /// Copy over the 6 MAC address bytes to the buffer.
-pub(crate) unsafe fn convert_mac_bytes(ptr: *mut IP_ADAPTER_ADDRESSES_LH) -> [u8; 6] {
-    ((*ptr).PhysicalAddress)[..6].try_into().unwrap()
+pub(crate) unsafe fn convert_mac_bytes(ptr: &IP_ADAPTER_ADDRESSES_LH) -> [u8; 6] {
+    (ptr.PhysicalAddress)[..6].try_into().unwrap()
 }
 
 pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {

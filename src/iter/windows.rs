@@ -29,9 +29,11 @@ impl Iterator for MacAddressIterator {
         if self.ptr.is_null() {
             None
         } else {
-            let bytes = unsafe { os::convert_mac_bytes(self.ptr) };
+            let ip_addr = unsafe { self.ptr.read_unaligned() };
 
-            self.ptr = unsafe { (*self.ptr).Next };
+            let bytes = unsafe { os::convert_mac_bytes(&ip_addr) };
+
+            self.ptr = ip_addr.Next;
 
             Some(MacAddress::new(bytes))
         }
