@@ -31,7 +31,15 @@ impl Iterator for MacAddressIterator {
         } else {
             let bytes = unsafe { os::convert_mac_bytes(self.ptr) };
 
-            self.ptr = unsafe { (*self.ptr).Next };
+            #[cfg(target_pointer_width = "32")]
+            {
+                self.ptr = unsafe { self.ptr.read_unaligned().Next };
+            }
+
+            #[cfg(not(target_pointer_width = "32"))]
+            {
+                self.ptr = unsafe { (*self.ptr).Next };
+            }
 
             Some(MacAddress::new(bytes))
         }
