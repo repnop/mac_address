@@ -5,15 +5,15 @@ use winapi::um::iptypes::PIP_ADAPTER_ADDRESSES;
 /// An iterator over all available MAC addresses on the system.
 pub struct MacAddressIterator {
     // So we don't UAF during iteration.
-    _buffer: Vec<u8>,
+    _buffer: os::AdaptersList,
     ptr: PIP_ADAPTER_ADDRESSES,
 }
 
 impl MacAddressIterator {
     /// Creates a new `MacAddressIterator`.
     pub fn new() -> Result<MacAddressIterator, MacAddressError> {
-        let mut adapters = os::get_adapters()?;
-        let ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
+        let adapters = os::get_adapters()?;
+        let ptr = unsafe { adapters.ptr() };
 
         Ok(Self {
             _buffer: adapters,
@@ -31,7 +31,15 @@ impl Iterator for MacAddressIterator {
         } else {
             let bytes = unsafe { os::convert_mac_bytes(self.ptr) };
 
-            self.ptr = unsafe { (*self.ptr).Next };
+            #[cfg(target_pointer_width = "32")]
+            {
+                self.ptr = unsafe { self.ptr.read_unaligned().Next };
+            }
+
+            #[cfg(not(target_pointer_width = "32"))]
+            {
+                self.ptr = unsafe { (*self.ptr).Next };
+            }
 
             Some(MacAddress::new(bytes))
         }

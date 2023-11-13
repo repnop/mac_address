@@ -10,7 +10,13 @@
 #[path = "windows.rs"]
 mod os;
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd", target_os = "android"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "android",
+))]
 #[path = "linux.rs"]
 mod os;
 
@@ -26,7 +32,14 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd", target_os = "android"))]
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "android",
+))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
@@ -198,7 +211,7 @@ mod tests {
         let string = "01-23-45-67-89-AB";
         let address = string.parse::<MacAddress>().unwrap();
         assert_eq!(address.bytes(), [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB]);
-        assert_eq!(format!("{}", address), string.replace("-", ":"));
+        assert_eq!(format!("{}", address), string.replace('-', ":"));
     }
 
     #[test]
