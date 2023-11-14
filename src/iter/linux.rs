@@ -19,15 +19,9 @@ impl MacAddressIterator {
 }
 
 fn filter_macs(intf: ifaddrs::InterfaceAddress) -> Option<MacAddress> {
-    if let Some(link) = intf.address?.as_link_addr() {
-        if let Some(addr) = link.addr() {
-            return Some(MacAddress::new(addr));
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    intf.address?
+        .as_link_addr()
+        .and_then(|link| link.addr().map(MacAddress::new))
 }
 
 impl Iterator for MacAddressIterator {
