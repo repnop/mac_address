@@ -4,10 +4,10 @@ fn main() {
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     let name = "eth0";
 
-    #[cfg(any(target_os = "freebsd"))]
+    #[cfg(target_os = "freebsd")]
     let name = "em0";
 
-    #[cfg(any(target_os = "openbsd"))]
+    #[cfg(target_os = "openbsd")]
     let name = "fxp0";
 
     #[cfg(target_os = "windows")]

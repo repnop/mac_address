@@ -1,5 +1,5 @@
 use crate::{MacAddress, MacAddressError};
-use nix::{ifaddrs, sys::socket::SockAddr};
+use nix::ifaddrs;
 
 /// An iterator over all available MAC addresses on the system.
 pub struct MacAddressIterator {
@@ -19,11 +19,9 @@ impl MacAddressIterator {
 }
 
 fn filter_macs(intf: ifaddrs::InterfaceAddress) -> Option<MacAddress> {
-    if let SockAddr::Link(link) = intf.address? {
-        Some(MacAddress::new(link.addr()))
-    } else {
-        None
-    }
+    intf.address?
+        .as_link_addr()
+        .and_then(|link| link.addr().map(MacAddress::new))
 }
 
 impl Iterator for MacAddressIterator {
