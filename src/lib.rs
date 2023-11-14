@@ -32,7 +32,6 @@ pub enum MacAddressError {
     InternalError,
 }
 
-
 #[cfg(any(
     target_os = "linux",
     target_os = "macos",
