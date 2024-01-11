@@ -21,6 +21,8 @@ mod os;
 mod os;
 
 mod iter;
+use std::net::IpAddr;
+
 pub use iter::MacAddressIterator;
 
 /// Possible errors when attempting to retrieve a MAC address.
@@ -126,6 +128,13 @@ pub fn mac_address_by_name(name: &str) -> Result<Option<MacAddress>, MacAddressE
 /// Attempts to look up the interface name via MAC address.
 pub fn name_by_mac_address(mac: &MacAddress) -> Result<Option<String>, MacAddressError> {
     os::get_ifname(&mac.bytes)
+}
+
+/// Attempts to look up the local MAC address by matching the Apapter's IP Address
+pub fn get_mac_address_by_ip(ip: &IpAddr) -> Result<Option<MacAddress>, MacAddressError> {
+    let bytes = os::get_mac_address_by_ip(ip)?;
+
+    Ok(bytes.map(|b| MacAddress { bytes: b }))
 }
 
 impl MacAddress {
