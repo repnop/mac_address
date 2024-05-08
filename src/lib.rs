@@ -141,19 +141,30 @@ impl std::str::FromStr for MacAddress {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut array = [0u8; 6];
 
-        let mut nth = 0;
-        for byte in input.split(|c| c == ':' || c == '-') {
-            if nth == 6 {
+        if input.contains([':', '-']) {
+            let mut nth = 0;
+            for byte in input.split(|c| c == ':' || c == '-') {
+                if nth == 6 {
+                    return Err(MacParseError::InvalidLength);
+                }
+
+                array[nth] =
+                    u8::from_str_radix(byte, 16).map_err(|_| MacParseError::InvalidDigit)?;
+
+                nth += 1;
+            }
+            if nth != 6 {
                 return Err(MacParseError::InvalidLength);
             }
-
-            array[nth] = u8::from_str_radix(byte, 16).map_err(|_| MacParseError::InvalidDigit)?;
-
-            nth += 1;
-        }
-
-        if nth != 6 {
-            return Err(MacParseError::InvalidLength);
+        } else {
+            if input.len() != 12 {
+                return Err(MacParseError::InvalidLength);
+            }
+            for octet in 0..6 {
+                let byte = &input[octet*2..=octet*2+1];
+                array[octet] =
+                    u8::from_str_radix(byte, 16).map_err(|_| MacParseError::InvalidDigit)?;
+            }
         }
 
         Ok(MacAddress::new(array))
@@ -214,12 +225,23 @@ mod tests {
     }
 
     #[test]
+    fn parse_str_no_sep() {
+        let string = "4827e24425d8";
+        let address = string.parse::<MacAddress>().unwrap();
+        assert_eq!(address.bytes(), [0x48, 0x27, 0xE2, 0x44, 0x25, 0xD8]);
+    }
+
+    #[test]
     fn parse_invalid_length() {
         let string = "80:FA:5B:41:10:6B:AC";
         let address = string.parse::<MacAddress>().unwrap_err();
         assert_eq!(MacParseError::InvalidLength, address);
 
         let string = "80:FA:5B:41";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidLength, address);
+
+        let string = "80FA5B41";
         let address = string.parse::<MacAddress>().unwrap_err();
         assert_eq!(MacParseError::InvalidLength, address);
     }
