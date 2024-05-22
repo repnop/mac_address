@@ -5,7 +5,7 @@
 
 `mac_address` provides a cross platform way to retrieve the [MAC address](https://en.wikipedia.org/wiki/MAC_address) of network hardware.
 
-Supported platforms: Linux, Windows, MacOS, FreeBSD, OpenBSD
+Supported platforms: Linux, Windows, MacOS, FreeBSD, OpenBSD, illumos
 
 ## Example
 
