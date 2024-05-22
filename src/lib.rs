@@ -16,6 +16,7 @@ mod os;
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "android",
+    target_os = "illumos",
 ))]
 #[path = "linux.rs"]
 mod os;
@@ -38,6 +39,7 @@ pub enum MacAddressError {
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "android",
+    target_os = "illumos",
 ))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {

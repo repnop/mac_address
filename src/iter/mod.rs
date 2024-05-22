@@ -8,6 +8,7 @@ mod internal;
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "android",
+    target_os = "illumos",
 ))]
 #[path = "linux.rs"]
 mod internal;
