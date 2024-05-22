@@ -77,6 +77,12 @@ impl std::fmt::Display for MacParseError {
 
 impl std::error::Error for MacParseError {}
 
+impl From<core::num::ParseIntError> for MacParseError {
+    fn from(_: core::num::ParseIntError) -> Self {
+        MacParseError::InvalidDigit
+    }
+}
+
 /// Contains the individual bytes of the MAC address.
 #[derive(Debug, Clone, Copy, PartialEq, Default, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
@@ -143,19 +149,37 @@ impl std::str::FromStr for MacAddress {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut array = [0u8; 6];
 
-        let mut nth = 0;
-        for byte in input.split(|c| c == ':' || c == '-') {
-            if nth == 6 {
-                return Err(MacParseError::InvalidLength);
-            }
-
-            array[nth] = u8::from_str_radix(byte, 16).map_err(|_| MacParseError::InvalidDigit)?;
-
-            nth += 1;
+        // expect the `str` to be ASCII since it'll probably fail to parse
+        // anyway, this also asserts that each character in the string is only
+        // one byte in length which is necessary for the `match` below
+        if !input.is_ascii() {
+            // kind of hacky, but without `#[non_exhaustive]` on `MacParseError`
+            // adding a new variant is technically a breaking change, ugh...
+            return Err(MacParseError::InvalidLength);
         }
 
-        if nth != 6 {
-            return Err(MacParseError::InvalidLength);
+        match input.len() {
+            // MAC address with separators, e.g. 00:11:22:33:44:55
+            17 => {
+                array
+                    .iter_mut()
+                    .zip(input.split(|c| c == ':' || c == '-'))
+                    .try_for_each::<_, Result<(), MacParseError>>(|(b, s)| {
+                        *b = u8::from_str_radix(s, 16)?;
+                        Ok(())
+                    })?;
+            }
+            // MAC address without separators, e.g. 001122334455
+            12 => {
+                array
+                    .iter_mut()
+                    .zip((0..6).map(|i| &input[i * 2..=i * 2 + 1]))
+                    .try_for_each::<_, Result<(), MacParseError>>(|(b, s)| {
+                        *b = u8::from_str_radix(s, 16)?;
+                        Ok(())
+                    })?;
+            }
+            _ => return Err(MacParseError::InvalidLength),
         }
 
         Ok(MacAddress::new(array))
@@ -216,6 +240,13 @@ mod tests {
     }
 
     #[test]
+    fn parse_str_no_sep() {
+        let string = "4827e24425d8";
+        let address = string.parse::<MacAddress>().unwrap();
+        assert_eq!(address.bytes(), [0x48, 0x27, 0xE2, 0x44, 0x25, 0xD8]);
+    }
+
+    #[test]
     fn parse_invalid_length() {
         let string = "80:FA:5B:41:10:6B:AC";
         let address = string.parse::<MacAddress>().unwrap_err();
@@ -224,11 +255,26 @@ mod tests {
         let string = "80:FA:5B:41";
         let address = string.parse::<MacAddress>().unwrap_err();
         assert_eq!(MacParseError::InvalidLength, address);
+
+        let string = "80FA5B41";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidLength, address);
+
+        let string = "80:FÁ:5B:41:10:6B";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidLength, address);
     }
 
     #[test]
     fn parse_invalid_digit() {
-        let string = "80:FA:ZZ:41:10:6B:AC";
+        let string = "80:FA:ZZ:41:10:6B";
+        let address = string.parse::<MacAddress>().unwrap_err();
+        assert_eq!(MacParseError::InvalidDigit, address);
+    }
+
+    #[test]
+    fn parse_invalid_separator() {
+        let string = "80|FA|AA|41|10|6B";
         let address = string.parse::<MacAddress>().unwrap_err();
         assert_eq!(MacParseError::InvalidDigit, address);
     }
