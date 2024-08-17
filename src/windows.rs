@@ -1,16 +1,16 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    ffi::CStr,
-    ffi::OsString,
-    os::windows::ffi::OsStringExt,
-    ptr, slice,
+use std::convert::{TryFrom, TryInto};
+use std::ffi::{CStr, OsString};
+use std::os::windows::ffi::OsStringExt;
+use std::{ptr, slice};
+use windows_sys::Win32::Foundation::ERROR_SUCCESS;
+use windows_sys::Win32::NetworkManagement::IpHelper::{
+    GetAdaptersAddresses, GET_ADAPTERS_ADDRESSES_FLAGS, IP_ADAPTER_ADDRESSES_LH,
 };
-use winapi::shared::{ntdef::ULONG, winerror::ERROR_SUCCESS, ws2def::AF_UNSPEC};
-use winapi::um::{iphlpapi::GetAdaptersAddresses, iptypes::IP_ADAPTER_ADDRESSES_LH};
+use windows_sys::Win32::Networking::WinSock::AF_UNSPEC;
 
 use crate::MacAddressError;
 
-const GAA_FLAG_NONE: ULONG = 0x0000;
+const GAA_FLAG_NONE: GET_ADAPTERS_ADDRESSES_FLAGS = 0x0000;
 
 /// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface
 /// devices list with
@@ -43,10 +43,11 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
                 return Ok(Some(bytes));
             } else {
                 #[cfg(not(target_pointer_width = "32"))]
-                let adapter_name = unsafe { CStr::from_ptr((*ptr).AdapterName) };
+                let adapter_name = unsafe { CStr::from_ptr((*ptr).AdapterName as *const _) };
 
                 #[cfg(target_pointer_width = "32")]
-                let adapter_name = unsafe { CStr::from_ptr(ptr.read_unaligned().AdapterName) };
+                let adapter_name =
+                    unsafe { CStr::from_ptr(ptr.read_unaligned().AdapterName as *const _) };
 
                 match adapter_name.to_str() {
                     Ok(s) if s == name => return Ok(Some(bytes)),
