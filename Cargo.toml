@@ -17,7 +17,11 @@ serde = { version = "1.0.198", features = ["derive"], optional = true }
 nix = { version = "0.28", features = ["net"] }
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winerror", "ws2def", "iphlpapi"] }
+windows-sys = { version = "0.59", features = [
+    "Win32_Networking_WinSock",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_NetworkManagement_Ndis"
+]}
 
 [dev-dependencies]
 serde_test = "1.0.117"
