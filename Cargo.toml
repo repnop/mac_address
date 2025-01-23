@@ -14,7 +14,7 @@ keywords = ["mac", "address", "network", "interface"]
 serde = { version = "1.0.198", features = ["derive"], optional = true }
 
 [target.'cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd", target_os = "android", target_os = "illumos"))'.dependencies]
-nix = { version = "0.28", features = ["net"] }
+nix = { version = "0.29", features = ["net"] }
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winerror", "ws2def", "iphlpapi"] }
