@@ -7,6 +7,9 @@ fn main() {
     #[cfg(target_os = "freebsd")]
     let name = "em0";
 
+    #[cfg(target_os = "netbsd")]
+    let name = "igc0";
+
     #[cfg(target_os = "openbsd")]
     let name = "fxp0";
 
