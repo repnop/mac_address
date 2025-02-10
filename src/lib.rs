@@ -2,7 +2,7 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows, MacOS, FreeBSD
+//! Supported platforms: Linux, Windows, MacOS, FreeBSD, NetBSD
 
 #![deny(missing_docs)]
 
@@ -14,6 +14,7 @@ mod os;
     target_os = "linux",
     target_os = "macos",
     target_os = "freebsd",
+    target_os = "netbsd",
     target_os = "openbsd",
     target_os = "android",
     target_os = "illumos",
@@ -37,6 +38,7 @@ pub enum MacAddressError {
     target_os = "linux",
     target_os = "macos",
     target_os = "freebsd",
+    target_os = "netbsd",
     target_os = "openbsd",
     target_os = "android",
     target_os = "illumos",
