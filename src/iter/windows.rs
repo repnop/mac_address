@@ -1,12 +1,13 @@
+use windows_sys::Win32::NetworkManagement::IpHelper::IP_ADAPTER_ADDRESSES_LH;
+
 use crate::os;
 use crate::{MacAddress, MacAddressError};
-use winapi::um::iptypes::PIP_ADAPTER_ADDRESSES;
 
 /// An iterator over all available MAC addresses on the system.
 pub struct MacAddressIterator {
     // So we don't UAF during iteration.
     _buffer: os::AdaptersList,
-    ptr: PIP_ADAPTER_ADDRESSES,
+    ptr: *mut IP_ADAPTER_ADDRESSES_LH,
 }
 
 impl MacAddressIterator {
