@@ -22,6 +22,10 @@ mod os;
 #[path = "linux.rs"]
 mod os;
 
+#[cfg(target_os = "hurd")]
+#[path = "dummy.rs"]
+mod os;
+
 mod iter;
 pub use iter::MacAddressIterator;
 

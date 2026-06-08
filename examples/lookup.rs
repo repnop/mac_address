@@ -22,6 +22,9 @@ fn main() {
     #[cfg(target_os = "illumos")]
     let name = "igb0";
 
+    #[cfg(target_os = "hurd")]
+    let name = "dummy";
+
     match mac_address_by_name(name) {
         Ok(Some(ma)) => {
             println!("MAC addr of {} = {}", name, ma);
