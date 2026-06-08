@@ -14,4 +14,8 @@ mod internal;
 #[path = "linux.rs"]
 mod internal;
 
+#[cfg(target_os = "hurd")]
+#[path = "dummy.rs"]
+mod internal;
+
 pub use internal::MacAddressIterator;
