@@ -126,7 +126,10 @@ pub(crate) unsafe fn convert_mac_bytes(ptr: *mut IP_ADAPTER_ADDRESSES_LH) -> [u8
         .unwrap();
 
     #[cfg(not(target_pointer_width = "32"))]
-    return ((*ptr).PhysicalAddress)[..6].try_into().unwrap();
+    {
+        let bytes = (*ptr).PhysicalAddress;
+        return bytes[..6].try_into().unwrap();
+    }
 }
 
 pub(crate) struct AdaptersList {
@@ -180,12 +183,14 @@ pub(crate) fn get_adapters() -> Result<AdaptersList, MacAddressError> {
         });
     }
 
+    let allocated_buf_size =
+        usize::try_from(buf_len).map_err(|_| MacAddressError::InternalError)?;
     // Allocate `buf_len` bytes, and create a raw pointer to it with the correct alignment
     // Safety:
     let adapters_list: *mut IP_ADAPTER_ADDRESSES_LH = unsafe {
         std::alloc::alloc(
             std::alloc::Layout::from_size_align(
-                usize::try_from(buf_len).map_err(|_| MacAddressError::InternalError)?,
+                allocated_buf_size,
                 core::mem::align_of::<IP_ADAPTER_ADDRESSES_LH>(),
             )
             .unwrap(),
@@ -208,18 +213,32 @@ pub(crate) fn get_adapters() -> Result<AdaptersList, MacAddressError> {
         )
     };
 
-    let adapters_list = AdaptersList {
-        ptr: adapters_list,
-        // Cast OK, we checked it above
-        size: buf_len as usize,
-    };
-
     // Make sure we were successful
     if result != ERROR_SUCCESS {
+        unsafe {
+            std::alloc::dealloc(
+                adapters_list as *mut u8,
+                std::alloc::Layout::from_size_align(
+                    // use `allocated_buf_size` here in case there's a change in
+                    // adapters (even though that's extremely unlikely to ever
+                    // happen) which will mutate `buf_len`, causing the pointer
+                    // to be deallocated with the incorrect length, which is UB.
+                    //
+                    // See https://github.com/repnop/mac_address/issues/55
+                    allocated_buf_size,
+                    core::mem::align_of::<IP_ADAPTER_ADDRESSES_LH>(),
+                )
+                .unwrap(),
+            )
+        };
+
         return Err(MacAddressError::InternalError);
     }
 
-    Ok(adapters_list)
+    Ok(AdaptersList {
+        ptr: adapters_list,
+        size: allocated_buf_size,
+    })
 }
 
 unsafe fn construct_string(ptr: *mut u16) -> OsString {
